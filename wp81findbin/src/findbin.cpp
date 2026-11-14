@@ -104,6 +104,20 @@ int search(BYTE* pReadBuffer, DWORD dwBytesRead, BYTE* pBytes, DWORD length, BYT
 	return 0;
 }
 
+static void printMatch(CHAR* pFilename)
+{
+	CHAR fullPath[MAX_PATH];
+	DWORD len = GetFullPathNameA(pFilename, MAX_PATH, fullPath, NULL);
+	if (len > 0 && len < MAX_PATH)
+	{
+		printf("\n%s\n", fullPath);
+	}
+	else
+	{
+		printf("\n%s\n", pFilename);
+	}
+}
+
 int findBin(CHAR* pFilename, BYTE* pBytes, size_t length)
 {
 	if (length < 1)
@@ -131,6 +145,8 @@ int findBin(CHAR* pFilename, BYTE* pBytes, size_t length)
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
 		printf("Unable to open file [%s]\n", pFilename);
+		free(pReadBuffer);
+		free(pTestBuffer);
 		return EXIT_FAILURE;
 	}
 
@@ -150,7 +166,7 @@ int findBin(CHAR* pFilename, BYTE* pBytes, size_t length)
 			searchResult = search(pReadBuffer, dwBytesRead, pBytes, length, pTestBuffer, &testBufferLength);
 			if (searchResult == 1)
 			{
-				printf("\nFile %s matches.\n", pFilename);
+				printMatch(pFilename);
 				break;
 			}
 		}
@@ -162,7 +178,7 @@ int findBin(CHAR* pFilename, BYTE* pBytes, size_t length)
 			memcpy_s(pTestBuffer + testBufferLength, length - testBufferLength, pReadBuffer, length - testBufferLength);
 			if (memcmp(pTestBuffer, pBytes, length) == 0)
 			{
-				printf("\nFile %s matches.\n", pFilename);
+				printMatch(pFilename);
 				break;
 			}
 			testBufferLength = 0;
@@ -172,7 +188,7 @@ int findBin(CHAR* pFilename, BYTE* pBytes, size_t length)
 			searchResult = search(pReadBuffer, dwBytesRead, pBytes, length, pTestBuffer, &testBufferLength);
 			if (searchResult == 1)
 			{
-				printf("\nFile %s matches.\n", pFilename);
+				printMatch(pFilename);
 				break;
 			}
 		}
@@ -180,6 +196,8 @@ int findBin(CHAR* pFilename, BYTE* pBytes, size_t length)
 	while (dwBytesRead > 0);
 
 	CloseHandle(hFile);
+	free(pReadBuffer);
+	free(pTestBuffer);
 
 	return exit_status;
 }
